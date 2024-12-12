@@ -5,6 +5,9 @@ import logging
 import uuid
 import httpx
 import asyncio
+#2024/12/12 add tiktoken_import(token calc)
+import tiktoken
+
 from quart import (
     Blueprint,
     Quart,
@@ -45,7 +48,7 @@ def create_app():
     app = Quart(__name__)
     app.register_blueprint(bp)
     app.config["TEMPLATES_AUTO_RELOAD"] = True
-    
+
     @app.before_serving
     async def init():
         try:
@@ -55,7 +58,7 @@ def create_app():
             logging.exception("Failed to initialize CosmosDB client")
             app.cosmos_conversation_client = None
             raise e
-    
+
     return app
 
 
@@ -114,7 +117,7 @@ MS_DEFENDER_ENABLED = os.environ.get("MS_DEFENDER_ENABLED", "true").lower() == "
 # Initialize Azure OpenAI Client
 async def init_openai_client():
     azure_openai_client = None
-    
+
     try:
         # API version check
         if (
@@ -185,7 +188,7 @@ async def init_cosmosdb_client():
             if not app_settings.chat_history.account_key:
                 async with DefaultAzureCredential() as cred:
                     credential = cred
-                    
+
             else:
                 credential = app_settings.chat_history.account_key
 
@@ -334,14 +337,95 @@ async def promptflow_request(request):
     except Exception as e:
         logging.error(f"An error occurred while making promptflow_request: {e}")
 
+#2024/12/12 add_start トークン算出
+def num_tokens_from_messages(messages):
+    #"""Returns the number of tokens used by a list of messages for the gpt-4o model."""
+    tokens_per_message = 2  # Configuration specific to gpt-4o
+    tokens_per_name = 0  # Configuration specific to gpt-4o
+
+    try:
+        encoding = tiktoken.encoding_for_model("gpt-4o")
+    except KeyError:
+        # Fallback encoding if the model is not explicitly supported
+        encoding = tiktoken.get_encoding("o200k_base")
+
+    # Calculate the total number of tokens
+    num_tokens = 0
+    for message in messages:
+        num_tokens += tokens_per_message
+        for key, value in message.items():
+            num_tokens += len(encoding.encode(value))
+            if key == "name":
+                num_tokens += tokens_per_name
+
+    # Add the priming tokens for the reply
+    num_tokens += 3
+
+    return num_tokens
+#2024/12/12 add_end トークン算出
+
+#2024/12/12 add_start リクエストされた最新メッセージのトークン評価
+def check_token_lastMessage(last_message):
+    request_token = 0
+
+    #GPT4
+    request_token = num_tokens_from_messages([{"role": last_message["role"] ,"content": last_message["content"]}])
+    print("tiktokenで計測した最新リクエストのGPT4のトークン数:", request_token)
+    if request_token > int(app_settings.azure_openai.limit):
+        print("リクエストトークンの最大値制限")
+        check_result = {
+            "result": True,
+            "message": "リクエストいただいた文字は" + str(request_token)+"トークンです。\n一度にリクエストできるトークン数は"+AZURE_OPENAI_LIMIT2+"トークン（約60,000文字）までです。\n"+AZURE_OPENAI_LIMIT2+"トークン以内に納まるように質問してください。"
+        }
+    else:
+        check_result = {
+            "result": False,
+            "message": ""
+        }
+
+    return check_result
+#2024/12/12 add_end
+
+#2024/12/12 add_start リクエスト全体のトークン評価
+def check_totaltoken(messages):
+    total_token = 0
+    #トータルトークンのカウント
+    for message in messages:
+        total_token += num_tokens_from_messages([{"role": message["role"] ,"content": message["content"]}])
+    print("tiktokenで計測したリクエスト全体のトークン数:", total_token)
+    if total_token + int(app_settings.azure_openai.max_tokens) > int(app_settings.azure_openai.totallimit):
+        check_result = {
+            "result": True,
+            "message": "ChatGPTとの会話文字数（トークン数）が上限の"+app_settings.azure_openai.totallimit+"トークンをオーバーしたため会話を続けることができません。\n”新規会話”もしくは”履歴のクリア”を押して、最初から質問してください。"
+        }
+    else:
+        check_result = {
+            "result": False,
+            "message": ""
+        }
+    return check_result
+#2024/12/12 add_end
 
 async def send_chat_request(request_body, request_headers):
     filtered_messages = []
     messages = request_body.get("messages", [])
+    #2024/12/12 add_start トークンチェック
+    #最新メッセージトークンチェック
+    check_token_result = check_token_lastMessage(messages[-1])
+    if check_token_result.get("result"):
+        #最新メッセージトークンエラー
+        raise CustomException(check_token_result.get("message"), 200)
+    #トータルトークンチェック
+    check_totaltoken_result = check_totaltoken(messages)
+    if check_totaltoken_result.get("result"):
+        #トータルトークン制限エラー
+        raise CustomException(check_totaltoken_result.get("message"), 200)
+    #2024/12/12 add_end
+
     for message in messages:
         if message.get("role") != 'tool':
             filtered_messages.append(message)
-            
+
     request_body['messages'] = filtered_messages
     model_args = prepare_model_args(request_body, request_headers)
 
@@ -349,7 +433,7 @@ async def send_chat_request(request_body, request_headers):
         azure_openai_client = await init_openai_client()
         raw_response = await azure_openai_client.chat.completions.with_raw_response.create(**model_args)
         response = raw_response.parse()
-        apim_request_id = raw_response.headers.get("apim-request-id") 
+        apim_request_id = raw_response.headers.get("apim-request-id")
     except Exception as e:
         logging.exception("Exception in send_chat_request")
         raise e
@@ -376,7 +460,7 @@ async def complete_chat_request(request_body, request_headers):
 async def stream_chat_request(request_body, request_headers):
     response, apim_request_id = await send_chat_request(request_body, request_headers)
     history_metadata = request_body.get("history_metadata", {})
-    
+
     async def generate():
         async for completionChunk in response:
             yield format_stream_response(completionChunk, history_metadata, apim_request_id)
@@ -883,3 +967,8 @@ async def generate_title(conversation_messages) -> str:
 
 
 app = create_app()
+
+class CustomException(Exception):
+    def __init__(self, message, status_code):
+        super().__init__(message)
+        self.status_code = status_code
