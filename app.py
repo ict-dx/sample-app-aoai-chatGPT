@@ -375,7 +375,7 @@ def check_token_lastMessage(last_message):
         print("リクエストトークンの最大値制限")
         check_result = {
             "result": True,
-            "message": "リクエストいただいた文字は" + str(request_token)+"トークンです。\n一度にリクエストできるトークン数は"+app_settings.azure_openai.limit+"トークン（約60,000文字）までです。\n"+AZURE_OPENAI_LIMIT2+"トークン以内に納まるように質問してください。"
+            "message": "リクエストいただいた文字は" + str(request_token)+"トークンです。\n一度にリクエストできるトークン数は"+app_settings.azure_openai.limit+"トークン（約60,000文字）までです。\n"+app_settings.azure_openai.limit+"トークン以内に納まるように質問してください。"
         }
     else:
         check_result = {
