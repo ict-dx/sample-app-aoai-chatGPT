@@ -83,6 +83,23 @@ const Layout = () => {
               <h1 className={styles.headerTitle}>{ui?.title}</h1>
             </Link>
           </Stack>
+          <Stack horizontal className={styles.push}>
+            <a href="https://nbn061.sharepoint.com/sites/wolfychat" target="_blank" rel="noopener nofeferrer" className={styles.guidelines}>
+              活用サイト
+            </a>
+            <a href="https://nbn061.sharepoint.com/sites/wolfychat/Lists/prompts/TOP.aspx" target="_blank" rel="noopener nofeferrer" className={styles.guidelines}>
+              プロンプト集
+            </a>
+            <a href="https://forms.office.com/Pages/ResponsePage.aspx?id=vJHkAvf9u0ixOSAD1uBwKBGK8iF8qjpHjKSt89NfhrtUNlBMWlRJS1YxMU9XNVRSRDlROUpBUk0xUC4u" target="_blank" rel="noopener nofeferrer" className={styles.guidelines}>
+              プロンプト投稿
+            </a>
+            <a href="https://nbn061.sharepoint.com/:b:/s/wolfychat/EZXoAngEiQ5IpdgT1ee7Em0BRFkuXWLtkG2NQorZPSN-2w?e=W8yGwL" target="_blank" rel="noopener nofeferrer" className={styles.guidelines}>
+              マニュアル
+            </a>
+            <a href="https://nbn061.sharepoint.com/:b:/s/wolfychat/EaF-XawFnFJIiMI7bOEPxeUBNdTWgd_jphKWg3ldH1VVaQ?e=Tdpbmk" target="_blank" rel="noopener nofeferrer" className={styles.guidelines}>
+              ガイドライン
+            </a>
+          </Stack>
           <Stack horizontal tokens={{ childrenGap: 4 }} className={styles.shareButtonContainer}>
             {appStateContext?.state.isCosmosDBAvailable?.status !== CosmosDBStatus.NotConfigured && ui?.show_chat_history_button !== false && (
               <HistoryButton
