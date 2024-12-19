@@ -84,20 +84,20 @@ const Layout = () => {
             </Link>
           </Stack>
           <Stack horizontal className={styles.push}>
-            <a href="https://nbn061.sharepoint.com/sites/wolfychat" target="_blank" rel="noopener nofeferrer" className={styles.guidelines}>
+            <a href="https://nbn061.sharepoint.com/sites/NBN-AI" target="_blank" rel="noopener nofeferrer" className={styles.guidelines}>
               活用サイト
             </a>
-            <a href="https://nbn061.sharepoint.com/sites/wolfychat/Lists/prompts/TOP.aspx" target="_blank" rel="noopener nofeferrer" className={styles.guidelines}>
+            <a href="https://nbn061.sharepoint.com/sites/NBN-AI/Lists/prompts/TOP.aspx?as=json" target="_blank" rel="noopener nofeferrer" className={styles.guidelines}>
               プロンプト集
             </a>
             <a href="https://forms.office.com/Pages/ResponsePage.aspx?id=vJHkAvf9u0ixOSAD1uBwKBGK8iF8qjpHjKSt89NfhrtUNlBMWlRJS1YxMU9XNVRSRDlROUpBUk0xUC4u" target="_blank" rel="noopener nofeferrer" className={styles.guidelines}>
               プロンプト投稿
             </a>
-            <a href="https://nbn061.sharepoint.com/:b:/s/wolfychat/EZXoAngEiQ5IpdgT1ee7Em0BRFkuXWLtkG2NQorZPSN-2w?e=W8yGwL" target="_blank" rel="noopener nofeferrer" className={styles.guidelines}>
+            <a href="https://nbn061.sharepoint.com/:b:/s/NBN-AI/EZXoAngEiQ5IpdgT1ee7Em0BRFkuXWLtkG2NQorZPSN-2w?e=fmQJoe" target="_blank" rel="noopener nofeferrer" className={styles.guidelines}>
               マニュアル
             </a>
-            <a href="https://nbn061.sharepoint.com/:b:/s/wolfychat/EaF-XawFnFJIiMI7bOEPxeUBNdTWgd_jphKWg3ldH1VVaQ?e=Tdpbmk" target="_blank" rel="noopener nofeferrer" className={styles.guidelines}>
-              ガイドライン
+            <a href="https://nbn061.sharepoint.com/:b:/s/NBN-AI/EQCArGvmkABLp4m4r0QWRVoBp4n2v_t80iR-9mT2PmSZVg?e=r3yVfd" target="_blank" rel="noopener nofeferrer" className={styles.guidelines}>
+              生成AIガイドライン
             </a>
           </Stack>
           <Stack horizontal tokens={{ childrenGap: 4 }} className={styles.shareButtonContainer}>
